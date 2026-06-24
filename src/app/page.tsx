@@ -80,10 +80,20 @@ export default function Home() {
             style={{ appearance: "none", backgroundImage: "url('data:image/svg+xml;utf8,<svg fill=\"%239ca3af\" height=\"24\" viewBox=\"0 0 24 24\" width=\"24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M7 10l5 5 5-5z\"/></svg>')", backgroundRepeat: "no-repeat", backgroundPositionX: "96%", backgroundPositionY: "center" }}
           >
             <option value="Restaurantes">Restaurantes</option>
+            <option value="Taquerías">Taquerías</option>
+            <option value="Pizzerías">Pizzerías</option>
+            <option value="Cafeterías">Cafeterías</option>
+            <option value="Heladerías">Heladerías</option>
+            <option value="Panaderías">Panaderías</option>
             <option value="Hoteles">Hoteles Pequeños</option>
             <option value="Tiendas">Tiendas Locales</option>
+            <option value="Lavanderías">Lavanderías</option>
+            <option value="Gimnasios">Gimnasios</option>
             <option value="Salones de belleza">Salones de Belleza</option>
+            <option value="Spas">Spas y Masajes</option>
             <option value="Clínicas">Clínicas y Salud</option>
+            <option value="Talleres Mecánicos">Talleres Mecánicos</option>
+            <option value="Ferreterías">Ferreterías</option>
           </select>
         </div>
 
