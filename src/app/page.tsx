@@ -5,7 +5,8 @@ import DashboardStats from "@/components/DashboardStats";
 import LeadsTable from "@/components/LeadsTable";
 import MapArea from "@/components/MapArea";
 import LegendBanner from "@/components/LegendBanner";
-import { Search, MapPin, BarChart3, List, Download } from "lucide-react";
+import TopDemosModal from "@/components/TopDemosModal";
+import { Search, MapPin, BarChart3, List, Download, Target } from "lucide-react";
 import Papa from "papaparse";
 
 export default function Home() {
@@ -13,6 +14,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [category, setCategory] = useState("Restaurantes");
   const [view, setView] = useState<"map" | "table">("map");
+  const [showTopDemos, setShowTopDemos] = useState(false);
 
   const fetchLeads = async (forceRefresh = false) => {
     setLoading(true);
@@ -97,8 +99,17 @@ export default function Home() {
           </select>
         </div>
 
-        <button className="btn btn-primary" onClick={() => fetchLeads(true)} disabled={loading} style={{ width: "100%" }}>
+        <button className="btn btn-primary" onClick={() => fetchLeads(true)} disabled={loading} style={{ width: "100%", marginBottom: "12px" }}>
           {loading ? "Escaneando..." : <><Search size={16} /> Escanear Área</>}
+        </button>
+
+        <button 
+          className="btn" 
+          onClick={() => setShowTopDemos(true)} 
+          disabled={leads.length === 0}
+          style={{ width: "100%", background: "linear-gradient(135deg, rgba(234, 179, 8, 0.2), rgba(234, 179, 8, 0.05))", color: "#eab308", border: "1px solid rgba(234, 179, 8, 0.3)", display: "flex", justifyContent: "center" }}
+        >
+          <Target size={16} /> 🎯 Top Demos
         </button>
 
         <div style={{ marginTop: "auto" }}>
@@ -150,6 +161,9 @@ export default function Home() {
           </div>
         </section>
       </main>
+      {showTopDemos && (
+        <TopDemosModal leads={leads} onClose={() => setShowTopDemos(false)} />
+      )}
     </div>
   );
 }

@@ -63,9 +63,24 @@ export async function GET(request: Request) {
     const searchId = searchResult.lastInsertRowid;
 
     const insertLead = db.prepare(`
-      INSERT OR REPLACE INTO leads (
+      INSERT INTO leads (
         search_id, place_id, name, address, phone, rating, user_ratings_total, google_maps_url, website, category, potential_level, photo_url, lat, lng, reviews_json
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(place_id) DO UPDATE SET
+        search_id=excluded.search_id,
+        name=excluded.name,
+        address=excluded.address,
+        phone=excluded.phone,
+        rating=excluded.rating,
+        user_ratings_total=excluded.user_ratings_total,
+        google_maps_url=excluded.google_maps_url,
+        website=excluded.website,
+        category=excluded.category,
+        potential_level=excluded.potential_level,
+        photo_url=excluded.photo_url,
+        lat=excluded.lat,
+        lng=excluded.lng,
+        reviews_json=excluded.reviews_json
     `);
 
     const insertMany = db.transaction((placesList) => {

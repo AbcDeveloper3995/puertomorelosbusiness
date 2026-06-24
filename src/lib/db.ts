@@ -31,8 +31,23 @@ db.exec(`
     lat REAL,
     lng REAL,
     reviews_json TEXT,
+    status TEXT DEFAULT 'NO_CONTACTADO',
+    notes TEXT,
     FOREIGN KEY(search_id) REFERENCES searches(id)
   );
 `);
+
+// Alter table dynamically to add new columns if they don't exist
+try {
+  db.exec("ALTER TABLE leads ADD COLUMN status TEXT DEFAULT 'NO_CONTACTADO'");
+} catch (e) {
+  // Column already exists, ignore
+}
+
+try {
+  db.exec("ALTER TABLE leads ADD COLUMN notes TEXT");
+} catch (e) {
+  // Column already exists, ignore
+}
 
 export default db;
