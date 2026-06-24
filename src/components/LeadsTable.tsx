@@ -4,6 +4,9 @@ import AuditModal from './AuditModal';
 
 export default function LeadsTable({ leads }: { leads: any[] }) {
   const [selectedLead, setSelectedLead] = useState<any | null>(null);
+  const [filterPotential, setFilterPotential] = useState<string>('ALL');
+  const [filterPhone, setFilterPhone] = useState<string>('ALL');
+  const [filterWebsite, setFilterWebsite] = useState<string>('ALL');
 
   if (leads.length === 0) {
     return (
@@ -22,8 +25,64 @@ export default function LeadsTable({ leads }: { leads: any[] }) {
     }
   };
 
+  const filteredLeads = leads.filter(lead => {
+    if (filterPotential !== 'ALL' && lead.potential_level !== filterPotential) return false;
+    
+    if (filterPhone === 'YES' && !lead.phone) return false;
+    if (filterPhone === 'NO' && lead.phone) return false;
+
+    if (filterWebsite === 'YES' && !lead.website) return false;
+    if (filterWebsite === 'NO' && lead.website) return false;
+
+    return true;
+  });
+
   return (
-    <div style={{ overflowX: "auto", height: "100%" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      {/* Filters Bar */}
+      <div style={{ padding: "12px 16px", background: "rgba(0,0,0,0.2)", borderBottom: "1px solid var(--border-color)", display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "center" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <span style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Potencial:</span>
+          <select 
+            value={filterPotential} 
+            onChange={(e) => setFilterPotential(e.target.value)}
+            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--border-color)", color: "white", padding: "4px 8px", borderRadius: "6px", fontSize: "0.8rem" }}
+          >
+            <option value="ALL">Todos</option>
+            <option value="HIGH">Alto (Verde)</option>
+            <option value="MEDIUM">Medio (Amarillo)</option>
+            <option value="LOW">Bajo (Rojo)</option>
+          </select>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <span style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Teléfono:</span>
+          <select 
+            value={filterPhone} 
+            onChange={(e) => setFilterPhone(e.target.value)}
+            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--border-color)", color: "white", padding: "4px 8px", borderRadius: "6px", fontSize: "0.8rem" }}
+          >
+            <option value="ALL">Todos</option>
+            <option value="YES">Con Teléfono</option>
+            <option value="NO">Sin Teléfono</option>
+          </select>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <span style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Sitio Web:</span>
+          <select 
+            value={filterWebsite} 
+            onChange={(e) => setFilterWebsite(e.target.value)}
+            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--border-color)", color: "white", padding: "4px 8px", borderRadius: "6px", fontSize: "0.8rem" }}
+          >
+            <option value="ALL">Todos</option>
+            <option value="YES">Con Web</option>
+            <option value="NO">Sin Web</option>
+          </select>
+        </div>
+      </div>
+
+      <div style={{ overflowX: "auto", flex: 1 }}>
       <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "0.875rem" }}>
         <thead style={{ background: "rgba(0,0,0,0.4)", position: "sticky", top: 0, zIndex: 10 }}>
           <tr>
@@ -36,8 +95,15 @@ export default function LeadsTable({ leads }: { leads: any[] }) {
           </tr>
         </thead>
         <tbody>
-          {leads.map((lead, idx) => (
-            <tr key={idx} style={{ borderBottom: "1px solid var(--border-color)", background: idx % 2 === 0 ? "transparent" : "rgba(255,255,255,0.02)" }}>
+          {filteredLeads.length === 0 ? (
+            <tr>
+              <td colSpan={6} style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>
+                No hay resultados con estos filtros.
+              </td>
+            </tr>
+          ) : (
+            filteredLeads.map((lead, idx) => (
+              <tr key={idx} style={{ borderBottom: "1px solid var(--border-color)", background: idx % 2 === 0 ? "transparent" : "rgba(255,255,255,0.02)" }}>
               <td style={{ padding: "12px 16px" }}>
                 <div style={{ fontWeight: 500 }}>{lead.name}</div>
                 <div className="text-xs text-muted" style={{ opacity: 0.7, marginTop: "4px" }}>{lead.address?.split(',')[0]}</div>
@@ -89,9 +155,11 @@ export default function LeadsTable({ leads }: { leads: any[] }) {
                 </div>
               </td>
             </tr>
-          ))}
+            ))
+          )}
         </tbody>
       </table>
+      </div>
       
       {selectedLead && (
         <AuditModal lead={selectedLead} onClose={() => setSelectedLead(null)} />
