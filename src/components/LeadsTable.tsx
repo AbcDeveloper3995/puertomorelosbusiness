@@ -23,8 +23,9 @@ export default function LeadsTable({ leads }: { leads: any[] }) {
       <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "0.875rem" }}>
         <thead style={{ background: "rgba(0,0,0,0.4)", position: "sticky", top: 0, zIndex: 10 }}>
           <tr>
-            <th style={{ padding: "12px 16px", color: "var(--text-secondary)", fontWeight: 500 }}>Nombre del Negocio</th>
+            <th style={{ padding: "12px 16px", color: "var(--text-secondary)", fontWeight: 500 }}>Nombre / Dirección</th>
             <th style={{ padding: "12px 16px", color: "var(--text-secondary)", fontWeight: 500 }}>Potencial</th>
+            <th style={{ padding: "12px 16px", color: "var(--text-secondary)", fontWeight: 500 }}>Contacto</th>
             <th style={{ padding: "12px 16px", color: "var(--text-secondary)", fontWeight: 500 }}>Sitio Web</th>
             <th style={{ padding: "12px 16px", color: "var(--text-secondary)", fontWeight: 500 }}>Reseñas</th>
             <th style={{ padding: "12px 16px", color: "var(--text-secondary)", fontWeight: 500 }}>Acción</th>
@@ -39,6 +40,13 @@ export default function LeadsTable({ leads }: { leads: any[] }) {
               </td>
               <td style={{ padding: "12px 16px" }}>
                 <span className={getBadgeClass(lead.potential_level)}>{lead.potential_level}</span>
+              </td>
+              <td style={{ padding: "12px 16px", color: "var(--text-primary)" }}>
+                {lead.phone ? (
+                  <span style={{ fontSize: "0.875rem" }}>{lead.phone}</span>
+                ) : (
+                  <span style={{ fontSize: "0.75rem", opacity: 0.5 }}>Sin teléfono</span>
+                )}
               </td>
               <td style={{ padding: "12px 16px", color: lead.website ? "var(--accent-primary)" : "var(--status-low)" }}>
                 {lead.website ? (
