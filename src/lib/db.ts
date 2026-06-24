@@ -30,6 +30,7 @@ db.exec(`
     photo_url TEXT,
     lat REAL,
     lng REAL,
+    reviews_json TEXT,
     FOREIGN KEY(search_id) REFERENCES searches(id)
   );
 `);

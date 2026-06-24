@@ -36,7 +36,7 @@ export async function GET(request: Request) {
       headers: {
         'Content-Type': 'application/json',
         'X-Goog-Api-Key': apiKey,
-        'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.rating,places.userRatingCount,places.websiteUri,places.primaryType,places.googleMapsUri,places.photos,places.location'
+        'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.rating,places.userRatingCount,places.websiteUri,places.primaryType,places.googleMapsUri,places.photos,places.location,places.reviews'
       },
       body: JSON.stringify({
         textQuery: query,
@@ -64,8 +64,8 @@ export async function GET(request: Request) {
 
     const insertLead = db.prepare(`
       INSERT OR REPLACE INTO leads (
-        search_id, place_id, name, address, phone, rating, user_ratings_total, google_maps_url, website, category, potential_level, photo_url, lat, lng
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        search_id, place_id, name, address, phone, rating, user_ratings_total, google_maps_url, website, category, potential_level, photo_url, lat, lng, reviews_json
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     const insertMany = db.transaction((placesList) => {
@@ -96,13 +96,14 @@ export async function GET(request: Request) {
           potential_level: potential,
           photo_url: photoUrl,
           lat: p.location?.latitude || null,
-          lng: p.location?.longitude || null
+          lng: p.location?.longitude || null,
+          reviews_json: p.reviews ? JSON.stringify(p.reviews) : null
         };
         
         insertLead.run(
           leadObj.search_id, leadObj.place_id, leadObj.name, leadObj.address, leadObj.phone,
           leadObj.rating, leadObj.user_ratings_total, leadObj.google_maps_url, leadObj.website,
-          leadObj.category, leadObj.potential_level, leadObj.photo_url, leadObj.lat, leadObj.lng
+          leadObj.category, leadObj.potential_level, leadObj.photo_url, leadObj.lat, leadObj.lng, leadObj.reviews_json
         );
         processed.push(leadObj);
       }

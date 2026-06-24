@@ -1,6 +1,10 @@
-import { ExternalLink, Star } from 'lucide-react';
+import { useState } from 'react';
+import { ExternalLink, Star, Search } from 'lucide-react';
+import AuditModal from './AuditModal';
 
 export default function LeadsTable({ leads }: { leads: any[] }) {
+  const [selectedLead, setSelectedLead] = useState<any | null>(null);
+
   if (leads.length === 0) {
     return (
       <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>
@@ -65,20 +69,33 @@ export default function LeadsTable({ leads }: { leads: any[] }) {
                 </div>
               </td>
               <td style={{ padding: "12px 16px" }}>
-                <a 
-                  href={lead.google_maps_url} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="btn btn-outline"
-                  style={{ padding: "4px 8px", fontSize: "0.75rem" }}
-                >
-                  Ver Mapa
-                </a>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button 
+                    onClick={() => setSelectedLead(lead)}
+                    className="btn btn-primary"
+                    style={{ padding: "4px 8px", fontSize: "0.75rem", background: "linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))", border: 'none' }}
+                  >
+                    <Search size={12} style={{ marginRight: '4px' }} /> Auditoría
+                  </button>
+                  <a 
+                    href={lead.google_maps_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="btn btn-outline"
+                    style={{ padding: "4px 8px", fontSize: "0.75rem" }}
+                  >
+                    Ver Mapa
+                  </a>
+                </div>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
+      
+      {selectedLead && (
+        <AuditModal lead={selectedLead} onClose={() => setSelectedLead(null)} />
+      )}
     </div>
   );
 }
