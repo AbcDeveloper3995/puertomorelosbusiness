@@ -31,6 +31,10 @@ export default function Home() {
     setLoading(false);
   };
 
+  const updateLead = (placeId: string, updatedData: any) => {
+    setLeads(currentLeads => currentLeads.map(l => l.place_id === placeId ? updatedData : l));
+  };
+
   useEffect(() => {
     fetchLeads();
   }, []);
@@ -135,7 +139,7 @@ export default function Home() {
             {view === "map" ? (
               <MapArea leads={leads} />
             ) : (
-              <LeadsTable leads={leads} />
+              <LeadsTable leads={leads} onUpdateLead={updateLead} />
             )}
           </div>
         </section>

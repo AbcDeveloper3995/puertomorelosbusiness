@@ -3,9 +3,38 @@ import { ExternalLink, Star, Search, MessageSquare } from 'lucide-react';
 import AuditModal from './AuditModal';
 import ReviewsModal from './ReviewsModal';
 
-export default function LeadsTable({ leads }: { leads: any[] }) {
+export default function LeadsTable({ leads, onUpdateLead }: { leads: any[], onUpdateLead?: (placeId: string, updatedData: any) => void }) {
   const [selectedLead, setSelectedLead] = useState<any | null>(null);
   const [selectedReviewsLead, setSelectedReviewsLead] = useState<any | null>(null);
+  const [loadingReviewsFor, setLoadingReviewsFor] = useState<string | null>(null);
+
+  const handleOpenModal = async (lead: any, type: 'audit' | 'reviews') => {
+    // If we already have reviews_json (even if empty string or "[]"), just open
+    if (lead.reviews_json !== null && lead.reviews_json !== undefined) {
+      if (type === 'audit') setSelectedLead(lead);
+      else setSelectedReviewsLead(lead);
+      return;
+    }
+
+    setLoadingReviewsFor(lead.place_id);
+    try {
+      const res = await fetch(`/api/places/${lead.place_id}/reviews`);
+      const data = await res.json();
+      
+      const updatedLead = { ...lead, reviews_json: JSON.stringify(data.reviews || []) };
+      
+      // Pass back up to parent if they care
+      if (onUpdateLead) onUpdateLead(lead.place_id, updatedLead);
+      
+      if (type === 'audit') setSelectedLead(updatedLead);
+      else setSelectedReviewsLead(updatedLead);
+    } catch (err) {
+      console.error(err);
+      if (type === 'audit') setSelectedLead(lead);
+      else setSelectedReviewsLead(lead);
+    }
+    setLoadingReviewsFor(null);
+  };
 
   if (leads.length === 0) {
     return (
@@ -73,18 +102,20 @@ export default function LeadsTable({ leads }: { leads: any[] }) {
               <td style={{ padding: "12px 16px" }}>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button 
-                    onClick={() => setSelectedLead(lead)}
+                    onClick={() => handleOpenModal(lead, 'audit')}
+                    disabled={loadingReviewsFor === lead.place_id}
                     className="btn btn-primary"
-                    style={{ padding: "4px 8px", fontSize: "0.75rem", background: "linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))", border: 'none' }}
+                    style={{ padding: "4px 8px", fontSize: "0.75rem", background: "linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))", border: 'none', opacity: loadingReviewsFor === lead.place_id ? 0.7 : 1 }}
                   >
-                    <Search size={12} style={{ marginRight: '4px' }} /> Auditoría
+                    <Search size={12} style={{ marginRight: '4px' }} /> {loadingReviewsFor === lead.place_id ? 'Cargando...' : 'Auditoría'}
                   </button>
                   <button 
-                    onClick={() => setSelectedReviewsLead(lead)}
+                    onClick={() => handleOpenModal(lead, 'reviews')}
+                    disabled={loadingReviewsFor === lead.place_id}
                     className="btn btn-outline"
-                    style={{ padding: "4px 8px", fontSize: "0.75rem", display: 'flex', alignItems: 'center', gap: '4px' }}
+                    style={{ padding: "4px 8px", fontSize: "0.75rem", display: 'flex', alignItems: 'center', gap: '4px', opacity: loadingReviewsFor === lead.place_id ? 0.7 : 1 }}
                   >
-                    <MessageSquare size={12} /> Reseñas
+                    <MessageSquare size={12} /> {loadingReviewsFor === lead.place_id ? 'Cargando...' : 'Reseñas'}
                   </button>
                   <a 
                     href={lead.google_maps_url} 
