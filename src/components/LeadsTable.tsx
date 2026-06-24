@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { ExternalLink, Star, Search } from 'lucide-react';
+import { ExternalLink, Star, Search, MessageSquare } from 'lucide-react';
 import AuditModal from './AuditModal';
+import ReviewsModal from './ReviewsModal';
 
 export default function LeadsTable({ leads }: { leads: any[] }) {
   const [selectedLead, setSelectedLead] = useState<any | null>(null);
+  const [selectedReviewsLead, setSelectedReviewsLead] = useState<any | null>(null);
 
   if (leads.length === 0) {
     return (
@@ -77,6 +79,13 @@ export default function LeadsTable({ leads }: { leads: any[] }) {
                   >
                     <Search size={12} style={{ marginRight: '4px' }} /> Auditoría
                   </button>
+                  <button 
+                    onClick={() => setSelectedReviewsLead(lead)}
+                    className="btn btn-outline"
+                    style={{ padding: "4px 8px", fontSize: "0.75rem", display: 'flex', alignItems: 'center', gap: '4px' }}
+                  >
+                    <MessageSquare size={12} /> Reseñas
+                  </button>
                   <a 
                     href={lead.google_maps_url} 
                     target="_blank" 
@@ -95,6 +104,10 @@ export default function LeadsTable({ leads }: { leads: any[] }) {
       
       {selectedLead && (
         <AuditModal lead={selectedLead} onClose={() => setSelectedLead(null)} />
+      )}
+
+      {selectedReviewsLead && (
+        <ReviewsModal lead={selectedReviewsLead} onClose={() => setSelectedReviewsLead(null)} />
       )}
     </div>
   );
