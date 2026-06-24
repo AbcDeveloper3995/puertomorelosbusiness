@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import DashboardStats from "@/components/DashboardStats";
 import LeadsTable from "@/components/LeadsTable";
 import MapArea from "@/components/MapArea";
+import LegendBanner from "@/components/LegendBanner";
 import { Search, MapPin, BarChart3, List, Download } from "lucide-react";
 import Papa from "papaparse";
 
@@ -100,6 +101,9 @@ export default function Home() {
       {/* Main Content */}
       <main style={{ flex: 1, padding: "16px 16px 16px 0", display: "flex", flexDirection: "column", gap: "16px", overflowY: "auto" }}>
         
+        {/* Legend Banner */}
+        <LegendBanner />
+
         {/* Top Header / Stats */}
         <section>
           <DashboardStats leads={leads} />
