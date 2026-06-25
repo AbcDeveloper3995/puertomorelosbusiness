@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: Request, props: { params: Promise<{ id: string }> }) {
   try {
+    const params = await props.params;
     const id = params.id;
     const body = await request.json();
     
-    // Solo permitimos actualizar status y notes
-    if (body.status !== undefined || body.notes !== undefined) {
+    // Solo permitimos actualizar status, notes, email e is_saved
+    if (body.status !== undefined || body.notes !== undefined || body.email !== undefined || body.is_saved !== undefined) {
       const updates = [];
       const values = [];
       
@@ -19,6 +20,16 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       if (body.notes !== undefined) {
         updates.push('notes = ?');
         values.push(body.notes);
+      }
+
+      if (body.email !== undefined) {
+        updates.push('email = ?');
+        values.push(body.email);
+      }
+      
+      if (body.is_saved !== undefined) {
+        updates.push('is_saved = ?');
+        values.push(body.is_saved ? 1 : 0);
       }
       
       if (updates.length > 0) {

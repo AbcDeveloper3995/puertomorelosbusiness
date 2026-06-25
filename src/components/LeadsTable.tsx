@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
-import { ExternalLink, Star, Search, Database } from 'lucide-react';
+import { ExternalLink, Star, Search, Database, Bookmark } from 'lucide-react';
 import AuditModal from './AuditModal';
+import ScrapeResultsModal from './ScrapeResultsModal';
 
 export default function LeadsTable({ leads }: { leads: any[] }) {
   const [localLeads, setLocalLeads] = useState<any[]>(leads);
   const [selectedLead, setSelectedLead] = useState<any | null>(null);
+  const [scrapeResults, setScrapeResults] = useState<{data: any, leadName: string} | null>(null);
   const [filterPotential, setFilterPotential] = useState<string>('ALL');
   const [filterPhone, setFilterPhone] = useState<string>('ALL');
+  const [filterEmail, setFilterEmail] = useState<string>('ALL');
   const [filterWebsite, setFilterWebsite] = useState<string>('ALL');
 
   useEffect(() => {
@@ -14,6 +17,10 @@ export default function LeadsTable({ leads }: { leads: any[] }) {
   }, [leads]);
 
   const handleStatusChange = async (id: number, newStatus: string) => {
+    if (!id) {
+      alert("Error: Refresca la página para sincronizar los datos correctamente.");
+      return;
+    }
     setLocalLeads(prev => prev.map(l => l.id === id ? { ...l, status: newStatus } : l));
     await fetch(`/api/leads/${id}`, {
       method: 'PUT',
@@ -22,16 +29,39 @@ export default function LeadsTable({ leads }: { leads: any[] }) {
     });
   };
 
-  const handleNotesChange = async (id: number, newNotes: string) => {
-    setLocalLeads(prev => prev.map(l => l.id === id ? { ...l, notes: newNotes } : l));
+  const handleEmailChange = async (id: number, newEmail: string) => {
+    if (!id) return;
+    setLocalLeads(prev => prev.map(l => l.id === id ? { ...l, email: newEmail } : l));
     await fetch(`/api/leads/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ notes: newNotes })
+      body: JSON.stringify({ email: newEmail })
+    });
+  };
+
+  const handleSaveToggle = async (id: number) => {
+    if (!id) return;
+    
+    // Get the latest state directly from localLeads to prevent race conditions
+    // if the user clicks Save immediately after typing an email
+    const lead = localLeads.find(l => l.id === id);
+    if (!lead) return;
+    
+    const newState = lead.is_saved === 1 ? 0 : 1;
+    
+    setLocalLeads(prev => prev.map(l => l.id === id ? { ...l, is_saved: newState } : l));
+    await fetch(`/api/leads/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_saved: newState })
     });
   };
 
   const handleScrape = async (lead: any) => {
+    if (!lead.id) {
+      alert("Error: Refresca la página para sincronizar los datos correctamente.");
+      return;
+    }
     setLocalLeads(prev => prev.map(l => l.id === lead.id ? { ...l, isScraping: true } : l));
     try {
       const res = await fetch('/api/scrape', {
@@ -40,14 +70,10 @@ export default function LeadsTable({ leads }: { leads: any[] }) {
         body: JSON.stringify({ url: lead.website })
       });
       const data = await res.json();
-      const techStr = data.technologies?.length > 0 ? `Tech: ${data.technologies.join(', ')}` : 'Tech: N/A';
-      const emailStr = data.emails?.length > 0 ? `Emails: ${data.emails.join(', ')}` : 'Emails: N/A';
-      const resultNotes = `${techStr} | ${emailStr}`;
-      
-      const newNotes = lead.notes ? `${lead.notes} | ${resultNotes}` : resultNotes;
-      await handleNotesChange(lead.id, newNotes);
+      setScrapeResults({ data, leadName: lead.name });
     } catch (e) {
       console.error(e);
+      alert("Error al analizar la web.");
     } finally {
       setLocalLeads(prev => prev.map(l => l.id === lead.id ? { ...l, isScraping: false } : l));
     }
@@ -84,6 +110,9 @@ export default function LeadsTable({ leads }: { leads: any[] }) {
     
     if (filterPhone === 'YES' && !lead.phone) return false;
     if (filterPhone === 'NO' && lead.phone) return false;
+
+    if (filterEmail === 'YES' && !lead.email) return false;
+    if (filterEmail === 'NO' && lead.email) return false;
 
     if (filterWebsite === 'YES' && !lead.website) return false;
     if (filterWebsite === 'NO' && lead.website) return false;
@@ -123,6 +152,19 @@ export default function LeadsTable({ leads }: { leads: any[] }) {
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <span style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Email:</span>
+          <select 
+            value={filterEmail} 
+            onChange={(e) => setFilterEmail(e.target.value)}
+            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--border-color)", color: "white", padding: "4px 8px", borderRadius: "6px", fontSize: "0.8rem" }}
+          >
+            <option value="ALL">Todos</option>
+            <option value="YES">Con Email</option>
+            <option value="NO">Sin Email</option>
+          </select>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <span style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Sitio Web:</span>
           <select 
             value={filterWebsite} 
@@ -143,6 +185,7 @@ export default function LeadsTable({ leads }: { leads: any[] }) {
             <th style={{ padding: "12px 16px", color: "var(--text-secondary)", fontWeight: 500 }}>Nombre / Dirección</th>
             <th style={{ padding: "12px 16px", color: "var(--text-secondary)", fontWeight: 500 }}>Potencial</th>
             <th style={{ padding: "12px 16px", color: "var(--text-secondary)", fontWeight: 500 }}>Contacto</th>
+            <th style={{ padding: "12px 16px", color: "var(--text-secondary)", fontWeight: 500 }}>Email</th>
             <th style={{ padding: "12px 16px", color: "var(--text-secondary)", fontWeight: 500 }}>Sitio Web</th>
             <th style={{ padding: "12px 16px", color: "var(--text-secondary)", fontWeight: 500 }}>Red Social</th>
             <th style={{ padding: "12px 16px", color: "var(--text-secondary)", fontWeight: 500 }}>Reseñas</th>
@@ -153,7 +196,7 @@ export default function LeadsTable({ leads }: { leads: any[] }) {
         <tbody>
           {filteredLeads.length === 0 ? (
             <tr>
-              <td colSpan={8} style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>
+              <td colSpan={9} style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>
                 No hay resultados con estos filtros.
               </td>
             </tr>
@@ -177,6 +220,26 @@ export default function LeadsTable({ leads }: { leads: any[] }) {
                 ) : (
                   <span style={{ fontSize: "0.75rem", opacity: 0.5 }}>Sin teléfono</span>
                 )}
+              </td>
+              <td style={{ padding: "12px 16px" }}>
+                <input
+                  type="email"
+                  placeholder="Añadir email..."
+                  value={lead.email || ''}
+                  onChange={(e) => setLocalLeads(prev => prev.map(l => (l.id === lead.id && lead.id) ? { ...l, email: e.target.value } : l))}
+                  onBlur={(e) => {
+                    handleEmailChange(lead.id, e.target.value);
+                  }}
+                  style={{ 
+                    background: "rgba(255,255,255,0.05)", 
+                    border: "1px solid var(--border-color)", 
+                    color: "white", 
+                    padding: "6px 8px", 
+                    borderRadius: "6px", 
+                    fontSize: "0.75rem",
+                    width: "140px"
+                  }}
+                />
               </td>
               <td style={{ padding: "12px 16px", color: hasRealWebsite ? "var(--accent-primary)" : "var(--status-low)" }}>
                 {hasRealWebsite ? (
@@ -225,20 +288,28 @@ export default function LeadsTable({ leads }: { leads: any[] }) {
                     <option value="GANADO">Cerrado</option>
                     <option value="PERDIDO">Rechazado</option>
                   </select>
-                  <input 
-                    type="text" 
-                    placeholder="Notas..."
-                    defaultValue={lead.notes || ''}
-                    onBlur={(e) => {
-                      if(e.target.value !== (lead.notes || '')) handleNotesChange(lead.id, e.target.value);
-                    }}
-                    style={{ background: "rgba(0,0,0,0.2)", border: "1px solid var(--border-color)", color: "white", padding: "4px 8px", borderRadius: "6px", fontSize: "0.75rem", width: "100%", outline: 'none' }}
-                  />
                 </div>
               </td>
               <td style={{ padding: "12px 16px" }}>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  {hasRealWebsite && (
+                  <button 
+                    onClick={() => handleSaveToggle(lead.id)}
+                    className="btn btn-outline"
+                    style={{ 
+                      padding: "4px 8px", 
+                      fontSize: "0.75rem", 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '4px',
+                      color: lead.is_saved ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                      borderColor: lead.is_saved ? 'var(--accent-primary)' : 'var(--border-color)',
+                      background: lead.is_saved ? 'rgba(var(--accent-primary-rgb), 0.1)' : 'transparent'
+                    }}
+                    title={lead.is_saved ? "Quitar de Guardados" : "Guardar Lead"}
+                  >
+                    <Bookmark size={12} fill={lead.is_saved ? 'var(--accent-primary)' : 'none'} />
+                  </button>
+                  {lead.website && (
                     <button 
                       onClick={() => handleScrape(lead)}
                       disabled={lead.isScraping}
@@ -276,6 +347,14 @@ export default function LeadsTable({ leads }: { leads: any[] }) {
       
       {selectedLead && (
         <AuditModal lead={selectedLead} onClose={() => setSelectedLead(null)} />
+      )}
+      
+      {scrapeResults && (
+        <ScrapeResultsModal 
+          results={scrapeResults.data} 
+          leadName={scrapeResults.leadName} 
+          onClose={() => setScrapeResults(null)} 
+        />
       )}
     </div>
   );

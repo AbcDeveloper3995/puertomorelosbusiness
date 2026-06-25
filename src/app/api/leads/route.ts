@@ -126,8 +126,11 @@ export async function GET(request: Request) {
     });
 
     const savedLeads = insertMany(places);
+    
+    // Recuperar los leads actualizados de la base de datos para incluir status, notes y email
+    const actualLeads = db.prepare('SELECT * FROM leads WHERE search_id = ?').all(searchId);
 
-    return NextResponse.json({ source: 'api', data: savedLeads });
+    return NextResponse.json({ source: 'api', data: actualLeads });
 
   } catch (error: any) {
     console.error('Error al buscar prospectos:', error);

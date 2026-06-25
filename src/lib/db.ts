@@ -50,4 +50,16 @@ try {
   // Column already exists, ignore
 }
 
+try {
+  db.exec("ALTER TABLE leads ADD COLUMN email TEXT");
+} catch (e) {
+  // Column already exists, ignore
+}
+
+try {
+  db.exec("ALTER TABLE leads ADD COLUMN is_saved INTEGER DEFAULT 0");
+} catch (e) {
+  // Column already exists, ignore
+}
+
 export default db;

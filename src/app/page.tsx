@@ -6,7 +6,7 @@ import LeadsTable from "@/components/LeadsTable";
 import MapArea from "@/components/MapArea";
 import LegendBanner from "@/components/LegendBanner";
 import TopDemosModal from "@/components/TopDemosModal";
-import { Search, MapPin, BarChart3, List, Download, Target } from "lucide-react";
+import { Search, MapPin, BarChart3, List, Download, Target, Bookmark } from "lucide-react";
 import Papa from "papaparse";
 
 export default function Home() {
@@ -15,9 +15,27 @@ export default function Home() {
   const [category, setCategory] = useState("Restaurantes");
   const [view, setView] = useState<"map" | "table">("map");
   const [showTopDemos, setShowTopDemos] = useState(false);
+  const [isViewingSaved, setIsViewingSaved] = useState(false);
+
+  const fetchSavedLeads = async () => {
+    setLoading(true);
+    setIsViewingSaved(true);
+    try {
+      const res = await fetch('/api/leads/saved');
+      const data = await res.json();
+      if (data.data) {
+        setLeads(data.data);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Fallo al buscar leads guardados");
+    }
+    setLoading(false);
+  };
 
   const fetchLeads = async (forceRefresh = false) => {
     setLoading(true);
+    setIsViewingSaved(false);
     try {
       const res = await fetch(`/api/leads?category=${encodeURIComponent(category)}${forceRefresh ? '&refresh=true' : ''}`);
       const data = await res.json();
@@ -107,9 +125,17 @@ export default function Home() {
           className="btn" 
           onClick={() => setShowTopDemos(true)} 
           disabled={leads.length === 0}
-          style={{ width: "100%", background: "linear-gradient(135deg, rgba(234, 179, 8, 0.2), rgba(234, 179, 8, 0.05))", color: "#eab308", border: "1px solid rgba(234, 179, 8, 0.3)", display: "flex", justifyContent: "center" }}
+          style={{ width: "100%", background: "linear-gradient(135deg, rgba(234, 179, 8, 0.2), rgba(234, 179, 8, 0.05))", color: "#eab308", border: "1px solid rgba(234, 179, 8, 0.3)", display: "flex", justifyContent: "center", marginBottom: "12px" }}
         >
           <Target size={16} /> 🎯 Top Demos
+        </button>
+
+        <button 
+          className="btn" 
+          onClick={fetchSavedLeads} 
+          style={{ width: "100%", background: isViewingSaved ? "var(--accent-primary)" : "rgba(255,255,255,0.05)", border: "1px solid var(--border-color)", display: "flex", justifyContent: "center" }}
+        >
+          <Bookmark size={16} /> Leads Guardados
         </button>
 
         <div style={{ marginTop: "auto" }}>
@@ -133,7 +159,7 @@ export default function Home() {
         {/* View Toggle & Content Area */}
         <section className="glass-panel" style={{ flex: 1, display: "flex", flexDirection: "column", padding: "20px", position: "relative", minHeight: "400px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-            <h2 className="h3">Oportunidades (Leads)</h2>
+            <h2 className="h3">{isViewingSaved ? "Leads Guardados" : "Oportunidades (Leads)"}</h2>
             <div style={{ display: "flex", gap: "8px", background: "rgba(0,0,0,0.2)", padding: "4px", borderRadius: "8px" }}>
               <button 
                 className="btn" 
